@@ -59,10 +59,12 @@ const TooltipContent = memo(({ name, isCopied, position }: {
 
 const EmojiButton = memo(({ 
   emoji,
-  index
+  index,
+  onEmojiClick
 }: { 
   emoji: EmojiItem;
   index: number;
+  onEmojiClick: (emoji: EmojiItem) => void;
 }) => {
   const { t } = useTranslation();
   const [isCopied, setIsCopied] = useState(false);
@@ -75,9 +77,36 @@ const EmojiButton = memo(({
 
   const handleClick = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(emoji.code);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 1000);
+      // 创建一个临时的文本区域
+      const textArea = document.createElement('textarea');
+      textArea.value = emoji.code;
+      
+      // 确保文本区域在视口之外
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      textArea.style.top = '0';
+      
+      document.body.appendChild(textArea);
+      textArea.select();
+      
+      let copySuccess = false;
+      // 尝试使用现代 API，如果失败则回退到 execCommand
+      try {
+        await navigator.clipboard.writeText(emoji.code);
+        copySuccess = true;
+      } catch {
+        copySuccess = document.execCommand('copy');
+      }
+      
+      // 清理
+      document.body.removeChild(textArea);
+      
+      if (copySuccess) {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 1000);
+      } else {
+        console.error(t('toast.copy.error'));
+      }
     } catch (error) {
       console.error(t('toast.copy.error'), error);
     }
@@ -288,6 +317,7 @@ export const EmojiGrid: React.FC<EmojiGridProps> = memo(({
                   key={emoji.code + index}
                   emoji={emoji}
                   index={index}
+                  onEmojiClick={onEmojiClick}
                 />
               ))}
             </div>

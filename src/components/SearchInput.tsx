@@ -24,26 +24,101 @@ interface SearchInputProps {
   onSelectResult?: (result: SearchResult) => void;
 }
 
-const INPUT_CLASS_NAME = "w-full h-10 px-4 pl-8 pr-20 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm";
-const BUTTON_CLASS_NAME = "px-2 h-7 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500 text-sm whitespace-nowrap";
-const CLEAR_BUTTON_CLASS_NAME = "w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
-const LOADING_SPINNER_CLASS = "animate-spin w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full";
-const DROPDOWN_CLASS_NAME = "absolute w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[280px] overflow-y-auto z-50";
-const DROPDOWN_ITEM_CLASS_NAME = "px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center gap-3 group border-b border-gray-100 last:border-0";
-const EMPTY_STATE_CLASS_NAME = "px-4 py-3 text-gray-500 text-center text-sm";
+const INPUT_CLASS_NAME = `
+  w-full h-11 
+  px-4 pl-10 pr-24
+  border border-gray-200 
+  rounded-xl
+  bg-gray-50/50
+  hover:bg-white
+  focus:bg-white 
+  focus:outline-none 
+  focus:ring-2 
+  focus:ring-blue-500/20 
+  focus:border-blue-500 
+  transition-all duration-200
+  text-[15px]
+  placeholder:text-gray-400
+`;
+
+const BUTTON_CLASS_NAME = `
+  px-3 h-8
+  bg-blue-500 
+  hover:bg-blue-600 
+  text-white 
+  rounded-lg
+  transition-colors 
+  disabled:opacity-50 
+  disabled:cursor-not-allowed 
+  disabled:hover:bg-blue-500 
+  text-sm 
+  whitespace-nowrap
+  font-medium
+`;
+
+const CLEAR_BUTTON_CLASS_NAME = `
+  w-8 h-8 
+  flex items-center justify-center 
+  text-gray-400 
+  hover:text-gray-600 
+  transition-colors 
+  disabled:opacity-50 
+  disabled:cursor-not-allowed
+  hover:bg-gray-100
+  rounded-full
+`;
+
+const LOADING_SPINNER_CLASS = `
+  animate-spin 
+  w-4 h-4 
+  border-2 
+  border-white 
+  border-t-transparent 
+  rounded-full
+`;
+
+const DROPDOWN_CLASS_NAME = `
+  absolute w-full mt-2
+  bg-white 
+  border border-gray-200 
+  rounded-xl
+  shadow-lg 
+  max-h-[320px] 
+  overflow-y-auto 
+  z-50
+  divide-y divide-gray-100
+`;
+
+const DROPDOWN_ITEM_CLASS_NAME = `
+  px-4 py-3.5
+  hover:bg-gray-50 
+  cursor-pointer 
+  flex items-center 
+  gap-3 
+  group
+`;
+
+const EMPTY_STATE_CLASS_NAME = `
+  px-4 py-4
+  text-gray-500 
+  text-center 
+  text-sm
+`;
+
 const SEARCH_ICON_STYLE = {
   position: 'absolute' as const,
-  left: '8px',
+  left: '12px',
   top: '50%',
   transform: 'translateY(-50%)',
-  fontSize: '14px'
+  fontSize: '15px',
+  opacity: 0.5
 };
 
 // 热门标签组件
 const HotTag = memo(() => {
   const { t } = useTranslation();
   return (
-    <span className="px-1.5 py-0.5 bg-orange-100 text-orange-600 text-[11px] rounded font-medium">
+    <span className="px-2 py-0.5 bg-orange-50 text-orange-500 text-xs rounded-full font-medium">
       {t('search.tag.hot')}
     </span>
   );
@@ -51,7 +126,7 @@ const HotTag = memo(() => {
 
 // 类型标签组件
 const TypeTag = memo(({ typeName }: { typeName: string }) => (
-  <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[11px] rounded">
+  <span className="px-2 py-0.5 bg-blue-50 text-blue-500 text-xs rounded-full">
     {typeName}
   </span>
 ));
@@ -60,7 +135,7 @@ const TypeTag = memo(({ typeName }: { typeName: string }) => (
 const CopiedTag = memo(() => {
   const { t } = useTranslation();
   return (
-    <span className="px-1.5 py-0.5 bg-green-50 text-green-600 text-[11px] rounded font-medium animate-fadeOut">
+    <span className="px-2 py-0.5 bg-green-50 text-green-500 text-xs rounded-full font-medium animate-fadeOut">
       {t('search.tag.copied')}
     </span>
   );
@@ -116,16 +191,43 @@ export const SearchInput: React.FC<SearchInputProps> = memo(({
 
   const handleCopyEmoji = useCallback(async (code: string, id: string) => {
     try {
-      await navigator.clipboard.writeText(code);
-      // 设置复制成功状态
-      setCopiedId(id);
-      // 1.5秒后清除复制成功状态
-      if (copiedTimeoutRef.current) {
-        clearTimeout(copiedTimeoutRef.current);
+      // 创建一个临时的文本区域
+      const textArea = document.createElement('textarea');
+      textArea.value = code;
+      
+      // 确保文本区域在视口之外
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      textArea.style.top = '0';
+      
+      document.body.appendChild(textArea);
+      textArea.select();
+      
+      let copySuccess = false;
+      // 尝试使用现代 API，如果失败则回退到 execCommand
+      try {
+        await navigator.clipboard.writeText(code);
+        copySuccess = true;
+      } catch {
+        copySuccess = document.execCommand('copy');
       }
-      copiedTimeoutRef.current = setTimeout(() => {
-        setCopiedId(null);
-      }, 1500);
+      
+      // 清理
+      document.body.removeChild(textArea);
+      
+      if (copySuccess) {
+        // 设置复制成功状态
+        setCopiedId(id);
+        // 1.5秒后清除复制成功状态
+        if (copiedTimeoutRef.current) {
+          clearTimeout(copiedTimeoutRef.current);
+        }
+        copiedTimeoutRef.current = setTimeout(() => {
+          setCopiedId(null);
+        }, 1500);
+      } else {
+        console.error(t('search.copy.error'));
+      }
     } catch (error) {
       console.error(t('search.copy.error'), error);
     }
@@ -303,15 +405,15 @@ export const SearchInput: React.FC<SearchInputProps> = memo(({
                 aria-label={t('search.result.item.aria', { name: result.emoji.name })}
               >
                 <div 
-                  className="w-10 h-10 flex items-center justify-center text-2xl bg-gray-50 rounded-lg group-hover:bg-white transition-colors"
+                  className="w-11 h-11 flex items-center justify-center text-2xl bg-gray-50/80 rounded-xl group-hover:bg-white group-hover:shadow-sm transition-all duration-200"
                   aria-label={t('search.result.emoji.aria', { code: result.emoji.code })}
                 >
                   {result.emoji.code}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1.5">
                     <span 
-                      className="font-medium text-gray-900 truncate max-w-[230px]" 
+                      className="font-medium text-gray-900 truncate max-w-[230px] text-[15px]" 
                       title={result.emoji.name}
                     >
                       {result.emoji.name}

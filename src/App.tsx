@@ -1,35 +1,24 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { fetchEmojiList, fetchEmojiExample, searchEmoji } from './services/api';
 import { EmojiGroup, EmojiItem } from './types';
-import { Language, LanguageSelector } from './components/LanguageSelector';
 import { SearchInput } from './components/SearchInput';
 import { CategoryNav } from './components/CategoryNav';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { EmojiGrid } from './components/EmojiGrid';
 import { Toast } from './components/Toast';
-import i18n from './i18n';
 import { useTranslation } from 'react-i18next';
 import SearchExample from './components/SearchExample';
+import NavHead from './components/NavHead';
+import i18n from './i18n';
 
-// 语言配置
-const LANGUAGES: Language[] = [
-  { code: 'zh', name: '简体中文' },
-  { code: 'en', name: 'English' },
-  { code: 'zh-TW', name: '繁體中文' },
-  { code: 'fr', name: 'Français' },
-  { code: 'es', name: 'Español' },
-] as const;
-
-type LanguageCode = typeof LANGUAGES[number]['code'];
+// 提取常量
+const RECENT_EMOJIS_LIMIT = 24;
+const TOAST_DURATION = 1500;
 
 interface ToastState {
   message: string;
   type: 'success' | 'error' | 'info';
 }
-
-// 提取常量
-const RECENT_EMOJIS_LIMIT = 24;
-const TOAST_DURATION = 1500;
 
 const App: React.FC = () => {
   const { t } = useTranslation();
@@ -40,10 +29,6 @@ const App: React.FC = () => {
   const [recentEmojis, setRecentEmojis] = useState<EmojiItem[]>([]);
   const [toast, setToast] = useState<ToastState>({ message: '', type: 'info' });
   const [isSearching, setIsSearching] = useState(false);
-  const [currentLang, setCurrentLang] = useState<LanguageCode>(() => {
-    const savedLang = localStorage.getItem('preferredLanguage') as LanguageCode;
-    return savedLang && LANGUAGES.some(lang => lang.code === savedLang) ? savedLang : 'en';
-  });
   const [isLoading, setIsLoading] = useState(false);
   const [icons, setIcons] = useState<string[]>([]);
   const [emojiExample, setEmojiExample] = useState<Record<string, any>[]>([]);
@@ -74,10 +59,11 @@ const App: React.FC = () => {
   }, []);
 
   // 优化 emoji 列表获取
-  const getEmojiList = useCallback(async (lang: LanguageCode) => {
+  const getEmojiList = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await fetchEmojiList(lang);
+      const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+      const data = await fetchEmojiList(currentLang);
       const groups: Record<string, EmojiItem[]> = {};
       const tmpIcons: string[] = [];
       
@@ -89,12 +75,13 @@ const App: React.FC = () => {
           groups[group.typeName] = emojis;
           tmpIcons.push(group.typeIcon);
         } catch (e) {
-          console.error(t('errors.parseEmoji'), e);
+          console.error('Parse emoji error:', e);
         }
       });
 
+      // 使用固定的 key 来存储最近使用的表情
       if (recentEmojis.length > 0) {
-        groups[t('categories.recent')] = recentEmojis;
+        groups['recent'] = recentEmojis;
       }
 
       setEmojiGroups(groups);
@@ -103,33 +90,43 @@ const App: React.FC = () => {
       if (!activeCategory || !(activeCategory in groups)) {
         setActiveCategory(Object.keys(groups)[0]);
       }
-      showToastMessage('toast.load.success', 'success');
     } catch (error) {
-      // console.error(t('errors.fetchEmoji'), error);  7890-1·旧344
-      showToastMessage('toast.load.error', 'error');
+      console.error('Failed to load emoji list:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [recentEmojis, showToastMessage, t]);
+  }, [recentEmojis, activeCategory]);
 
-  // 初始化应用
+  // 使用 useRef 来存储当前语言和初始化状态
+  const prevLangRef = useRef(i18n.language);
+  const isInitializedRef = useRef(false);
+  
+  // 监听语言变化和初始化
   useEffect(() => {
-    getEmojiList(currentLang);
-  }, [currentLang, getEmojiList]);
+    const currentLang = i18n.language;
+    
+    // 首次加载或语言变化时调用
+    if (!isInitializedRef.current || prevLangRef.current !== currentLang) {
+      prevLangRef.current = currentLang;
+      isInitializedRef.current = true;
+      getEmojiList();
+    }
+  }, [i18n.language, getEmojiList]);
 
   // 获取emoji示例
   const fetchEmojiExampleData = useCallback(async () => {
     try {
+      const currentLang = localStorage.getItem('preferredLanguage') || 'en';
       const data = await fetchEmojiExample(currentLang);
       setEmojiExample(data);
     } catch (error) {
       console.error(t('errors.fetchEmoji'), error);
     }
-  }, [currentLang, t]);
+  }, [t]);
 
   useEffect(() => {
     fetchEmojiExampleData();
-  }, [currentLang, fetchEmojiExampleData]);
+  }, [fetchEmojiExampleData]);
 
   // 优化搜索结果处理
   const mappedSearchResults = useMemo(() => 
@@ -152,6 +149,7 @@ const App: React.FC = () => {
   const handleSearch = useCallback(async (keyword: string) => {
     setIsSearching(true);
     try {
+      const currentLang = localStorage.getItem('preferredLanguage') || 'en';
       const data = await searchEmoji({ keyword, language: currentLang });
       setSearchResults(data);
     } catch (error) {
@@ -159,7 +157,7 @@ const App: React.FC = () => {
     } finally {
       setIsSearching(false);
     }
-  }, [currentLang, showToastMessage]);
+  }, [showToastMessage]);
 
   const handleEmojiClick = useCallback(async (emoji: EmojiItem) => {
     try {
@@ -173,7 +171,7 @@ const App: React.FC = () => {
       if (!isSearching) {
         setEmojiGroups(prev => ({
           ...prev,
-          [t('categories.recent')]: updatedRecent
+          'recent': updatedRecent
         }));
       }
     } catch (error) {
@@ -182,19 +180,10 @@ const App: React.FC = () => {
     }
   }, [recentEmojis, isSearching, showToastMessage, t]);
 
-  const handleLanguageChange = useCallback((code: LanguageCode) => {
-    setCurrentLang(code);
-    localStorage.setItem('preferredLanguage', code);
-    i18n.changeLanguage(code).catch(err => {
-      console.warn('Failed to load language:', err);
-    });
-    document.documentElement.setAttribute('lang', code);
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', t('meta.description'));
-    }
-    document.title = t('meta.title');
-  }, [t]);
+  const handleExampleClick = useCallback((example: string) => {
+    setSearchKeyword(example);
+    handleSearch(example);
+  }, [setSearchKeyword, handleSearch]);
 
   // 优化渲染逻辑
   const renderContent = useMemo(() => {
@@ -222,15 +211,20 @@ const App: React.FC = () => {
     );
   }, [isLoading, emojiGroups, activeCategory, searchResults, t, handleEmojiClick]);
 
-  const handleExampleClick = useCallback((example: string) => {
-    setSearchKeyword(example);
-    handleSearch(example);
-  }, [setSearchKeyword, handleSearch]);
-
   return (
-    <div className="flex flex-col bg-white w-full h-full overflow-hidden px-2 py-3">
+    <div className="flex flex-col bg-white w-full h-full overflow-hidden px-4 pb-3">
+      <NavHead />
+      
+      {/* 视觉分隔 */}
+      <div className="flex items-center gap-3 px-1 my-3">
+        <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-blue-200 to-transparent" />
+        <div className="w-1.5 h-1.5 rounded-full bg-blue-200" />
+        <div className="w-2 h-2 rounded-full bg-purple-200" />
+        <div className="w-1.5 h-1.5 rounded-full bg-blue-200" />
+        <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-purple-200 to-transparent" />
+      </div>
+
       <div className="bg-white sticky top-0 z-40 flex-shrink-0 pb-2">
-        
         <div className="flex items-center gap-2">
           <SearchInput
             value={searchKeyword}
@@ -246,13 +240,6 @@ const App: React.FC = () => {
               }
             }}
           />
-          <div className="flex-shrink-0">
-            <LanguageSelector
-              languages={LANGUAGES}
-              currentLang={currentLang}
-              onLanguageChange={handleLanguageChange}
-            />
-          </div>
         </div>
 
         {/* 关键词 */}
@@ -261,7 +248,6 @@ const App: React.FC = () => {
           onExampleClick={handleExampleClick}
           onRefresh={fetchEmojiExampleData}
         />
-
       </div>
 
       <div className="flex flex-1 overflow-hidden border rounded-md">
