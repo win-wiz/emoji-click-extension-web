@@ -43,7 +43,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = memo(({
         className="h-10 w-40 border justify-between border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors flex items-center gap-2 relative z-10"
         onClick={toggleMenu}
       >
-        <span className="flex-1">{getLocaleFlag(currentLang)} {currentLanguage}</span>
+        <span className="flex-1 flex justify-start ml-4">{getLocaleFlag(currentLang)} {currentLanguage}</span>
         <span className="text-gray-400 mr-4">▼</span>
       </button>
 
