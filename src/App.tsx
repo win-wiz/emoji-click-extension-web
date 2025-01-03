@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { fetchEmojiList, searchEmoji } from './services/api';
+import { fetchEmojiList, fetchEmojiExample, searchEmoji } from './services/api';
 import { EmojiGroup, EmojiItem } from './types';
 import { Language, LanguageSelector } from './components/LanguageSelector';
 import { SearchInput } from './components/SearchInput';
@@ -9,12 +9,13 @@ import { EmojiGrid } from './components/EmojiGrid';
 import { Toast } from './components/Toast';
 import i18n from './i18n';
 import { useTranslation } from 'react-i18next';
+import SearchExample from './components/SearchExample';
 
 // 语言配置
 const LANGUAGES: Language[] = [
   { code: 'zh', name: '简体中文' },
   { code: 'en', name: 'English' },
-  { code: 'zh-tw', name: '繁體中文' },
+  { code: 'zh-TW', name: '繁體中文' },
   { code: 'fr', name: 'Français' },
   { code: 'es', name: 'Español' },
 ] as const;
@@ -45,19 +46,9 @@ const App: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [icons, setIcons] = useState<string[]>([]);
-
+  const [emojiExample, setEmojiExample] = useState<Record<string, any>[]>([]);
   const debounceRef = useRef<NodeJS.Timeout>();
   const toastTimeoutRef = useRef<NodeJS.Timeout>();
-
-  // 优化防抖函数
-  const debounce = useCallback((func: Function, wait: number) => {
-    return (...args: any[]) => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-      debounceRef.current = setTimeout(() => func(...args), wait);
-    };
-  }, []);
 
   // 优化 Toast 显示逻辑
   const showToastMessage = useCallback((message: string, type: ToastState['type'] = 'info') => {
@@ -114,7 +105,7 @@ const App: React.FC = () => {
       }
       showToastMessage('toast.load.success', 'success');
     } catch (error) {
-      console.error(t('errors.fetchEmoji'), error);
+      // console.error(t('errors.fetchEmoji'), error);  7890-1·旧344
       showToastMessage('toast.load.error', 'error');
     } finally {
       setIsLoading(false);
@@ -125,6 +116,20 @@ const App: React.FC = () => {
   useEffect(() => {
     getEmojiList(currentLang);
   }, [currentLang, getEmojiList]);
+
+  // 获取emoji示例
+  const fetchEmojiExampleData = useCallback(async () => {
+    try {
+      const data = await fetchEmojiExample(currentLang);
+      setEmojiExample(data);
+    } catch (error) {
+      console.error(t('errors.fetchEmoji'), error);
+    }
+  }, [currentLang, t]);
+
+  useEffect(() => {
+    fetchEmojiExampleData();
+  }, [currentLang, fetchEmojiExampleData]);
 
   // 优化搜索结果处理
   const mappedSearchResults = useMemo(() => 
@@ -180,7 +185,9 @@ const App: React.FC = () => {
   const handleLanguageChange = useCallback((code: LanguageCode) => {
     setCurrentLang(code);
     localStorage.setItem('preferredLanguage', code);
-    i18n.changeLanguage(code);
+    i18n.changeLanguage(code).catch(err => {
+      console.warn('Failed to load language:', err);
+    });
     document.documentElement.setAttribute('lang', code);
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
@@ -215,9 +222,15 @@ const App: React.FC = () => {
     );
   }, [isLoading, emojiGroups, activeCategory, searchResults, t, handleEmojiClick]);
 
+  const handleExampleClick = useCallback((example: string) => {
+    setSearchKeyword(example);
+    handleSearch(example);
+  }, [setSearchKeyword, handleSearch]);
+
   return (
-    <div className="flex flex-col bg-white w-[500px] h-[600px]">
-      <div className="p-3 border-b bg-white sticky top-0 z-40">
+    <div className="flex flex-col bg-white w-[550px] max-h-screen px-2 py-3">
+      <div className="bg-white sticky top-0 z-40">
+        
         <div className="flex items-center gap-2">
           <SearchInput
             value={searchKeyword}
@@ -241,9 +254,17 @@ const App: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* 关键词 */}
+        <SearchExample 
+          examples={emojiExample} 
+          onExampleClick={handleExampleClick}
+          onRefresh={fetchEmojiExampleData}
+        />
+
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden border rounded-md min-h-[500px]">
         <CategoryNav
           categories={emojiGroups}
           activeCategory={activeCategory}

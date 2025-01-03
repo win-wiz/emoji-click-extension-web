@@ -54,41 +54,84 @@ export const CategoryNav: React.FC<CategoryNavProps> = memo(({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const activeCategoryRef = useRef<HTMLButtonElement>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const scrollTimeoutRef = useRef<number | null>(null);
 
-  // console.log('categories', categories);
+  const scrollToCenter = useCallback((immediate = false) => {
+    if (scrollTimeoutRef.current) {
+      window.clearTimeout(scrollTimeoutRef.current);
+    }
 
-  const scrollToCenter = useCallback(() => {
-    const container = containerRef.current;
-    const element = activeCategoryRef.current;
-    if (!container || !element) return;
+    const doScroll = () => {
+      const container = containerRef.current;
+      const element = activeCategoryRef.current;
+      if (!container || !element) return;
 
-    const containerHeight = container.clientHeight;
-    const elementHeight = element.offsetHeight;
-    const elementTop = element.offsetTop;
-    
-    const targetScroll = elementTop - (containerHeight / 2) + (elementHeight / 2);
-    const maxScroll = container.scrollHeight - containerHeight;
-    const finalScroll = Math.max(0, Math.min(targetScroll, maxScroll));
-    
-    if (container.scrollTop === finalScroll) return;
-    
-    container.scrollTo({
-      top: finalScroll,
-      behavior: 'smooth'
-    });
+      const containerHeight = container.clientHeight;
+      const elementHeight = element.offsetHeight;
+      const elementTop = element.offsetTop;
+      
+      // 获取当前元素的前一个兄弟元素
+      const previousElement = element.previousElementSibling as HTMLElement;
+      // const previousElementHeight = previousElement ? previousElement.offsetHeight : 0;
+      
+      let targetScroll;
+      
+      if (previousElement) {
+        // 如果有前一个元素，确保它也能显示
+        const previousElementTop = previousElement.offsetTop;
+        targetScroll = previousElementTop;
+      } else {
+        // 如果没有前一个元素，居中显示当前元素
+        targetScroll = Math.max(0, elementTop - (containerHeight / 2) + (elementHeight / 2));
+      }
+
+      const maxScroll = container.scrollHeight - containerHeight;
+      const finalScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+      
+      if (container.scrollTop === finalScroll) return;
+      
+      container.scrollTo({
+        top: finalScroll,
+        behavior: immediate ? 'instant' : 'smooth'
+      });
+    };
+
+    // 延迟执行滚动，等待布局稳定
+    scrollTimeoutRef.current = window.setTimeout(doScroll, immediate ? 0 : 150);
   }, []);
 
   const createClickHandler = useCallback((typeName: string) => {
     return () => {
       if (typeName === activeCategory) return;
       onCategoryChange(typeName);
-      requestAnimationFrame(scrollToCenter);
+      scrollToCenter(false);
     };
   }, [activeCategory, onCategoryChange, scrollToCenter]);
 
   useEffect(() => {
-    const frameId = requestAnimationFrame(scrollToCenter);
-    return () => cancelAnimationFrame(frameId);
+    // 监听容器大小变化
+    if (containerRef.current && !resizeObserverRef.current) {
+      resizeObserverRef.current = new ResizeObserver(() => {
+        scrollToCenter(true);
+      });
+      resizeObserverRef.current.observe(containerRef.current);
+    }
+
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+      if (scrollTimeoutRef.current) {
+        window.clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [scrollToCenter]);
+
+  // 当活动分类改变时滚动
+  useEffect(() => {
+    scrollToCenter(false);
   }, [activeCategory, scrollToCenter]);
 
   const categoryButtons = useMemo(() => {
@@ -96,7 +139,6 @@ export const CategoryNav: React.FC<CategoryNavProps> = memo(({
     
     return Object.entries(categories).map(([typeName], index) => {
       const isRecent = typeName === '最近使用';
-      // console.log('icons', icons, index);
       const icon = isRecent ? '🕒' : icons[index] || '😀';
       const isActive = activeCategory === typeName;
       
@@ -111,12 +153,12 @@ export const CategoryNav: React.FC<CategoryNavProps> = memo(({
         />
       );
     });
-  }, [categories, activeCategory, createClickHandler]);
+  }, [categories, activeCategory, createClickHandler, icons]);
 
   return (
     <div 
       ref={containerRef} 
-      className="w-24 border-r overflow-y-auto scroll-smooth"
+      className="w-24 border-r overflow-y-auto scroll-smooth relative"
       style={{ scrollbarWidth: 'thin' }}
     >
       {isLoading ? <CategorySkeleton /> : categoryButtons}

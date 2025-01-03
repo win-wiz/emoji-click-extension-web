@@ -45,7 +45,9 @@ const resources = {
       'category.count_other': '{{count}} emojis',
       'search.result.text': '{{code}} {{name}}',
       'emoji.type.default': 'Type {{type}}',
-      'search.clear.aria': 'Clear search'
+      'search.clear.aria': 'Clear search',
+      'search.example.title': 'Search Example',
+      'search.example.refresh': 'Refresh Example'
     }
   },
   zh: {
@@ -91,7 +93,9 @@ const resources = {
       'category.count_other': '{{count}} 个表情',
       'search.result.text': '{{code}} {{name}}',
       'emoji.type.default': '类型 {{type}}',
-      'search.clear.aria': '清空搜索'
+      'search.clear.aria': '清空搜索',
+      'search.example.title': '搜索示例',
+      'search.example.refresh': '刷新示例'
     }
   },
   'zh-tw': {
@@ -137,7 +141,9 @@ const resources = {
       'category.count_other': '{{count}} 個表情',
       'search.result.text': '{{code}} {{name}}',
       'emoji.type.default': '類型 {{type}}',
-      'search.clear.aria': '清空搜尋'
+      'search.clear.aria': '清空搜尋',
+      'search.example.title': '搜尋示例',
+      'search.example.refresh': '刷新示例'
     }
   },
   fr: {
@@ -183,7 +189,9 @@ const resources = {
       'category.count_other': '{{count}} émojis',
       'search.result.text': '{{code}} {{name}}',
       'emoji.type.default': 'Type {{type}}',
-      'search.clear.aria': 'Effacer la recherche'
+      'search.clear.aria': 'Effacer la recherche',
+      'search.example.title': 'Exemples de recherche',
+      'search.example.refresh': 'Actualiser les exemples'
     }
   },
   es: {
@@ -229,7 +237,9 @@ const resources = {
       'category.count_other': '{{count}} emojis',
       'search.result.text': '{{code}} {{name}}',
       'emoji.type.default': 'Tipo {{type}}',
-      'search.clear.aria': 'Borrar búsqueda'
+      'search.clear.aria': 'Borrar búsqueda',
+      'search.example.title': 'Ejemplos de búsqueda',
+      'search.example.refresh': 'Actualizar ejemplos'
     }
   }
 };
