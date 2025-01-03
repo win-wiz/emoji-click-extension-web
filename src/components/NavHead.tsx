@@ -5,8 +5,8 @@ import i18n from '../i18n';
 
 // 语言配置
 const LANGUAGES: Language[] = [
-  { code: 'zh', name: '简体中文' },
   { code: 'en', name: 'English' },
+  { code: 'zh', name: '简体中文' },
   { code: 'zh-TW', name: '繁體中文' },
   { code: 'fr', name: 'Français' },
   { code: 'es', name: 'Español' },

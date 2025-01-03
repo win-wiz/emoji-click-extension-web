@@ -43,7 +43,7 @@ const resources = {
       'category.count': '{{count}} emojis',
       'category.count_one': '{{count}} emoji',
       'category.count_other': '{{count}} emojis',
-      'search.example.hint': 'Enter any phrase: mood, feeling, poem or lyrics',
+      'search.example.hint': 'Type any phrase—your mood, feeling, a line of poetry, or lyrics.',
       'search.example.title': 'Search Example',
       'search.example.refresh': 'Refresh Example'
     }

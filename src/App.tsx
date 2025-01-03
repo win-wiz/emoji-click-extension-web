@@ -162,7 +162,7 @@ const App: React.FC = () => {
   const handleEmojiClick = useCallback(async (emoji: EmojiItem) => {
     try {
       await navigator.clipboard.writeText(emoji.code);
-      showToastMessage('toast.copy.success', 'success');
+      showToastMessage('search.tag.copied', 'success');
       
       const updatedRecent = [emoji, ...recentEmojis.filter(e => e.code !== emoji.code)]
         .slice(0, RECENT_EMOJIS_LIMIT);

@@ -45,7 +45,7 @@ const TooltipContent = memo(({ name, isCopied, position }: {
         }
       `}
     >
-      {isCopied ? t('toast.copy.success') : name}
+      {isCopied ? t('search.tag.copied') : name}
       <div 
         className={`
           absolute w-2 h-2
