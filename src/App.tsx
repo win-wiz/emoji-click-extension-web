@@ -141,7 +141,7 @@ const App: React.FC = () => {
         name: emoji.name,
         hot: emoji.hot,
         type: emoji.type,
-        typeName: emoji.typeName || t('emoji.type.default', { type: emoji.type })
+        typeName: emoji.typeName || String(emoji.type)
       }
     })), [searchResults, t]);
 
