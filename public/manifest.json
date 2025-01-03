@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Emoji Picker",
+  "name": "EmojiClick Toolbar:  emoji ai finder",
   "version": "1.0.0",
-  "description": "A simple emoji picker extension",
+  "description": "Your AI emoji finder! Type any mood, phrase, or lyrics, and get the perfect emoji instantly. No more endless scrolling. 🚀",
   "permissions": [
     "clipboardWrite",
     "storage"
@@ -22,4 +22,4 @@
     "48": "icon48.png",
     "128": "icon128.png"
   }
-} 
+}

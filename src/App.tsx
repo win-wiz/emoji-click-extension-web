@@ -228,8 +228,8 @@ const App: React.FC = () => {
   }, [setSearchKeyword, handleSearch]);
 
   return (
-    <div className="flex flex-col bg-white w-[550px] max-h-screen px-2 py-3">
-      <div className="bg-white sticky top-0 z-40">
+    <div className="flex flex-col bg-white w-[500px] min-h-[500px] max-h-[600px] overflow-hidden px-2 py-3">
+      <div className="bg-white sticky top-0 z-40 flex-shrink-0 pb-2">
         
         <div className="flex items-center gap-2">
           <SearchInput
@@ -264,7 +264,7 @@ const App: React.FC = () => {
 
       </div>
 
-      <div className="flex flex-1 overflow-hidden border rounded-md min-h-[500px]">
+      <div className="flex flex-1 overflow-hidden border rounded-md">
         <CategoryNav
           categories={emojiGroups}
           activeCategory={activeCategory}
@@ -272,7 +272,7 @@ const App: React.FC = () => {
           onCategoryChange={setActiveCategory}
           isLoading={isLoading && Object.keys(emojiGroups).length === 0}
         />
-        <div className="flex-1 min-w-0 overflow-auto">
+        <div className="flex-1 min-w-0 overflow-y-auto">
           {renderContent}
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { EmojiGroup, EmojiItem } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:8787' : 'https://emoji-plugin-api.tjsglion.workers.dev');
-
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:8787' : 'https://extension.emojis.click');
+// const API_BASE_URL = 'https://extension.emojis.click';
 export async function fetchEmojiList(language: string): Promise<EmojiGroup[]> {
   const response = await fetch(`${API_BASE_URL}/api/emoji/list?language=${language}`);
   const { data, code } = await response.json();

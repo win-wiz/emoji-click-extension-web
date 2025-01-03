@@ -35,7 +35,7 @@ const resources = {
         'search.empty': 'No emojis found',
         'search.result': 'Found {{count}} emojis',
         'search.error': 'Search failed',
-        'copy.success': 'Copied successfully',
+        'copy.success': 'Copied',
         'copy.error': 'Failed to copy'
       },
       'search.tip': 'Press Enter to search',
@@ -43,9 +43,7 @@ const resources = {
       'category.count': '{{count}} emojis',
       'category.count_one': '{{count}} emoji',
       'category.count_other': '{{count}} emojis',
-      'search.result.text': '{{code}} {{name}}',
-      'emoji.type.default': 'Type {{type}}',
-      'search.clear.aria': 'Clear search',
+      'search.example.hint': 'Enter any phrase: mood, feeling, poem or lyrics',
       'search.example.title': 'Search Example',
       'search.example.refresh': 'Refresh Example'
     }
@@ -91,9 +89,7 @@ const resources = {
       'category.count': '{{count}} 个表情',
       'category.count_one': '{{count}} 个表情',
       'category.count_other': '{{count}} 个表情',
-      'search.result.text': '{{code}} {{name}}',
-      'emoji.type.default': '类型 {{type}}',
-      'search.clear.aria': '清空搜索',
+      'search.example.hint': '输入任意短语：如心情、感受、诗句或歌词',
       'search.example.title': '搜索示例',
       'search.example.refresh': '刷新示例'
     }
@@ -139,9 +135,7 @@ const resources = {
       'category.count': '{{count}} 個表情',
       'category.count_one': '{{count}} 個表情',
       'category.count_other': '{{count}} 個表情',
-      'search.result.text': '{{code}} {{name}}',
-      'emoji.type.default': '類型 {{type}}',
-      'search.clear.aria': '清空搜尋',
+      'search.example.hint': '輸入任意短語：如心情、感受、詩句或歌詞',
       'search.example.title': '搜尋示例',
       'search.example.refresh': '刷新示例'
     }
@@ -187,9 +181,7 @@ const resources = {
       'category.count': '{{count}} émojis',
       'category.count_one': '{{count}} émoji',
       'category.count_other': '{{count}} émojis',
-      'search.result.text': '{{code}} {{name}}',
-      'emoji.type.default': 'Type {{type}}',
-      'search.clear.aria': 'Effacer la recherche',
+      'search.example.hint': 'Entrez une phrase : humeur, sentiment, poème ou paroles',
       'search.example.title': 'Exemples de recherche',
       'search.example.refresh': 'Actualiser les exemples'
     }
@@ -235,9 +227,7 @@ const resources = {
       'category.count': '{{count}} emojis',
       'category.count_one': '{{count}} emoji',
       'category.count_other': '{{count}} emojis',
-      'search.result.text': '{{code}} {{name}}',
-      'emoji.type.default': 'Tipo {{type}}',
-      'search.clear.aria': 'Borrar búsqueda',
+      'search.example.hint': 'Ingrese cualquier frase: estado de ánimo, sentimiento, poema o letra',
       'search.example.title': 'Ejemplos de búsqueda',
       'search.example.refresh': 'Actualizar ejemplos'
     }

@@ -26,7 +26,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = React.memo(({ size 
   const className = useMemo(() => `${SIZE_CLASSES[size]} animate-spin`, [size]);
 
   return (
-    <div className="flex items-center justify-center mt-5">
+    <div className="flex items-center justify-center mt-4">
       <div className={className}>
         <svg 
           className="text-blue-500" 
