@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 600px;
+      height: 600px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    #expandButton {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      z-index: 1000;
+      padding: 8px 16px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #expandButton:hover {
+      background: #357abd;
+    }
+
+    dialog {
+      width: 600px;
+      height: 800px;
+      padding: 0;
+      border: none;
+      background: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    #mainContent, #dialogContent {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="mainContent" src="index.html"></iframe>
+  <button id="expandButton">展开</button>
+  
+  <dialog id="expandDialog">
+    <iframe id="dialogContent" src="index.html"></iframe>
+  </dialog>
+
+  <script>
+    const expandButton = document.getElementById('expandButton');
+    const dialog = document.getElementById('expandDialog');
+    const dialogContent = document.getElementById('dialogContent');
+
+    expandButton.addEventListener('click', () => {
+      dialog.showModal();
+    });
+
+    dialog.addEventListener('click', (e) => {
+      const rect = dialog.getBoundingClientRect();
+      const isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
+      if (!isInDialog) {
+        dialog.close();
+      }
+    });
+  </script>
+</body>
+</html> 

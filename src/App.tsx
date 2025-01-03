@@ -228,7 +228,7 @@ const App: React.FC = () => {
   }, [setSearchKeyword, handleSearch]);
 
   return (
-    <div className="flex flex-col bg-white w-[500px] min-h-[500px] max-h-[600px] overflow-hidden px-2 py-3">
+    <div className="flex flex-col bg-white w-full h-full overflow-hidden px-2 py-3">
       <div className="bg-white sticky top-0 z-40 flex-shrink-0 pb-2">
         
         <div className="flex items-center gap-2">
