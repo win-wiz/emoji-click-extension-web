@@ -6,7 +6,7 @@
   "permissions": [
     "clipboardWrite",
     "storage",
-    "activeTab",
+    // "activeTab",
     "scripting",
     "tabs",
     "notifications"
