@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EmojiClick Toolbar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Your AI emoji finder! Type any mood, phrase, or lyrics, and get the perfect emoji instantly. No more endless scrolling. 🚀",
   "permissions": [
     "clipboardWrite",
