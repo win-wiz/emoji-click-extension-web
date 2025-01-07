@@ -1,35 +1,31 @@
 import React, { memo } from 'react';
-import { LanguageSelector, Language } from './LanguageSelector';
+import { LanguageSelector } from './LanguageSelector';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-
-// 语言配置
-const LANGUAGES: Language[] = [
-  { code: 'en', name: 'English' },
-  { code: 'zh', name: '简体中文' },
-  { code: 'zh-TW', name: '繁體中文' },
-  { code: 'fr', name: 'Français' },
-  { code: 'es', name: 'Español' },
-];
+import { 
+  LANGUAGES, 
+  getCurrentLanguage, 
+  saveLanguagePreference 
+} from '../utils/language';
 
 interface NavHeadProps {
   className?: string;
+  onClose?: () => void;
 }
 
-const NavHead: React.FC<NavHeadProps> = memo(({ className = '' }) => {
+const NavHead: React.FC<NavHeadProps> = memo(({ className = '', onClose }) => {
   const { t } = useTranslation();
-  const [currentLang, setCurrentLang] = React.useState<string>(() => {
-    const savedLang = localStorage.getItem('preferredLanguage');
-    return savedLang && LANGUAGES.some(lang => lang.code === savedLang) ? savedLang : 'en';
-  });
+  const [currentLang, setCurrentLang] = React.useState<string>(() => getCurrentLanguage());
 
   const handleLanguageChange = React.useCallback((code: string) => {
-    setCurrentLang(code);
-    localStorage.setItem('preferredLanguage', code);
-    i18n.changeLanguage(code).catch(err => {
+    const savedCode = saveLanguagePreference(code);
+    setCurrentLang(savedCode);
+    
+    i18n.changeLanguage(savedCode).catch(err => {
       console.warn('Failed to load language:', err);
     });
-    document.documentElement.setAttribute('lang', code);
+    
+    document.documentElement.setAttribute('lang', savedCode);
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', t('meta.description'));
@@ -54,7 +50,7 @@ const NavHead: React.FC<NavHeadProps> = memo(({ className = '' }) => {
           </h1>
         </div>
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center space-x-4">
         <div className="relative z-50">
           <LanguageSelector
             languages={LANGUAGES}
@@ -62,6 +58,24 @@ const NavHead: React.FC<NavHeadProps> = memo(({ className = '' }) => {
             onLanguageChange={handleLanguageChange}
           />
         </div>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors duration-200"
+          aria-label="关闭"
+        >
+          <svg
+            className="w-5 h-5 text-gray-500"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
     </div>
   );

@@ -15,47 +15,47 @@ const ROW_GAP = 8; // 行间距
 const BUFFER_SIZE = 8; // 上下缓冲区的行数
 
 // 提取成单独的组件，避免不必要的重渲染
-const TooltipContent = memo(({ name, isCopied, position }: { 
-  name: string; 
-  isCopied: boolean;
-  position: 'left' | 'right';
-}) => {
-  const { t } = useTranslation();
+// const TooltipContent = memo(({ name, isCopied, position }: { 
+//   name: string; 
+//   isCopied: boolean;
+//   position: 'left' | 'right';
+// }) => {
+//   const { t } = useTranslation();
 
-  const tooltipClasses = useMemo(() => ({
-    left: 'right-full top-1/2 -translate-y-1/2 mr-2',
-    right: 'left-full top-1/2 -translate-y-1/2 ml-2'
-  }), []);
+//   const tooltipClasses = useMemo(() => ({
+//     left: 'right-full top-1/2 -translate-y-1/2 mr-2',
+//     right: 'left-full top-1/2 -translate-y-1/2 ml-2'
+//   }), []);
 
-  const arrowClasses = useMemo(() => ({
-    left: '-right-1 top-1/2 -translate-y-1/2 rotate-45',
-    right: '-left-1 top-1/2 -translate-y-1/2 rotate-45'
-  }), []);
+//   const arrowClasses = useMemo(() => ({
+//     left: '-right-1 top-1/2 -translate-y-1/2 rotate-45',
+//     right: '-left-1 top-1/2 -translate-y-1/2 rotate-45'
+//   }), []);
 
-  return (
-    <div 
-      className={`
-        absolute whitespace-nowrap z-20 text-white
-        px-2 py-1 text-xs rounded
-        pointer-events-none transition-all duration-200 ease-in-out
-        ${tooltipClasses[position]}
-        ${isCopied 
-          ? 'bg-green-500 opacity-100' 
-          : 'bg-gray-800 opacity-0 group-hover:opacity-100'
-        }
-      `}
-    >
-      {isCopied ? t('search.tag.copied') : name}
-      <div 
-        className={`
-          absolute w-2 h-2
-          ${arrowClasses[position]}
-          ${isCopied ? 'bg-green-500' : 'bg-gray-800'}
-        `} 
-      />
-    </div>
-  );
-});
+//   return (
+//     <div 
+//       className={`
+//         absolute whitespace-nowrap z-20 text-white
+//         px-2 py-1 text-xs rounded
+//         pointer-events-none transition-all duration-200 ease-in-out
+//         ${tooltipClasses[position]}
+//         ${isCopied 
+//           ? 'bg-green-500 opacity-0' 
+//           : 'bg-gray-800 opacity-0 group-hover:opacity-100'
+//         }
+//       `}
+//     >
+//       {name}
+//       <div 
+//         className={`
+//           absolute w-2 h-2
+//           ${arrowClasses[position]}
+//           ${isCopied ? 'bg-green-500' : 'bg-gray-800'}
+//         `} 
+//       />
+//     </div>
+//   );
+// });
 
 const EmojiButton = memo(({ 
   emoji,
@@ -75,42 +75,31 @@ const EmojiButton = memo(({
     return colIndex >= GRID_COLS - 4 ? 'left' : 'right';
   }, [index]);
 
-  const handleClick = useCallback(async () => {
-    try {
-      // 创建一个临时的文本区域
-      const textArea = document.createElement('textarea');
-      textArea.value = emoji.code;
-      
-      // 确保文本区域在视口之外
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-9999px';
-      textArea.style.top = '0';
-      
-      document.body.appendChild(textArea);
-      textArea.select();
-      
-      let copySuccess = false;
-      // 尝试使用现代 API，如果失败则回退到 execCommand
-      try {
-        await navigator.clipboard.writeText(emoji.code);
-        copySuccess = true;
-      } catch {
-        copySuccess = document.execCommand('copy');
+  // 添加消息监听器
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'copyResult' && event.data?.text === emoji.code) {
+        if (event.data.success) {
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 1000);
+        }
       }
-      
-      // 清理
-      document.body.removeChild(textArea);
-      
-      if (copySuccess) {
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 1000);
-      } else {
-        console.error(t('toast.copy.error'));
-      }
-    } catch (error) {
-      console.error(t('toast.copy.error'), error);
-    }
-  }, [emoji.code, t]);
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [emoji.code]);
+
+  const handleClick = useCallback(() => {
+    // 调用父组件的回调
+    onEmojiClick(emoji);
+    
+    // 发送复制请求到content script
+    window.parent.postMessage({
+      type: 'copyEmoji',
+      text: emoji.code
+    }, '*');
+  }, [emoji, onEmojiClick]);
 
   return (
     <button
@@ -137,11 +126,28 @@ const EmojiButton = memo(({
         {emoji.code}
       </div>
 
-      <TooltipContent 
-        name={emoji.name}
-        isCopied={isCopied}
-        position={tooltipPosition}
-      />
+      {/* Tooltip */}
+      <div 
+        className={`
+          absolute whitespace-nowrap z-20 text-white
+          px-2 py-1 text-xs rounded
+          pointer-events-none transition-all duration-200 ease-in-out
+          ${tooltipPosition === 'left' ? 'right-full top-1/2 -translate-y-1/2 mr-2' : 'left-full top-1/2 -translate-y-1/2 ml-2'}
+          ${isCopied 
+            ? 'bg-green-500 opacity-100' 
+            : 'bg-gray-800 opacity-0 group-hover:opacity-100'
+          }
+        `}
+      >
+        {isCopied ? t('search.tag.copied') : emoji.name}
+        <div 
+          className={`
+            absolute w-2 h-2
+            ${tooltipPosition === 'left' ? '-right-1 top-1/2 -translate-y-1/2 rotate-45' : '-left-1 top-1/2 -translate-y-1/2 rotate-45'}
+            ${isCopied ? 'bg-green-500' : 'bg-gray-800'}
+          `} 
+        />
+      </div>
     </button>
   );
 });
@@ -251,10 +257,10 @@ export const EmojiGrid: React.FC<EmojiGridProps> = memo(({
     return rows * (ITEM_SIZE + ROW_GAP) - ROW_GAP; // 减去最后一行的间距
   }, [emojis.length]);
 
-  const topOffset = useMemo(() => {
-    const startRow = Math.floor(visibleRange.start / GRID_COLS);
-    return startRow * (ITEM_SIZE + ROW_GAP);
-  }, [visibleRange.start]);
+  // const topOffset = useMemo(() => {
+  //   const startRow = Math.floor(visibleRange.start / GRID_COLS);
+  //   return startRow * (ITEM_SIZE + ROW_GAP);
+  // }, [visibleRange.start]);
 
   return (
     <div className="flex-1 flex flex-col h-full">

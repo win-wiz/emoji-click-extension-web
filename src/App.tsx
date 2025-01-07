@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import SearchExample from './components/SearchExample';
 import NavHead from './components/NavHead';
 import i18n from './i18n';
+import { LANGUAGE_STORAGE_KEY, getCurrentLanguage } from './utils/language';
 
 // 提取常量
 const RECENT_EMOJIS_LIMIT = 24;
@@ -34,6 +35,12 @@ const App: React.FC = () => {
   const [emojiExample, setEmojiExample] = useState<Record<string, any>[]>([]);
   const debounceRef = useRef<NodeJS.Timeout>();
   const toastTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // 处理关闭事件
+  const handleClose = useCallback(() => {
+    // 向 content script 发送关闭消息
+    window.parent.postMessage({ type: 'closePanel' }, '*');
+  }, []);
 
   // 优化 Toast 显示逻辑
   const showToastMessage = useCallback((message: string, type: ToastState['type'] = 'info') => {
@@ -62,7 +69,7 @@ const App: React.FC = () => {
   const getEmojiList = useCallback(async () => {
     setIsLoading(true);
     try {
-      const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+      const currentLang = getCurrentLanguage();
       const data = await fetchEmojiList(currentLang);
       const groups: Record<string, EmojiItem[]> = {};
       const tmpIcons: string[] = [];
@@ -116,7 +123,7 @@ const App: React.FC = () => {
   // 获取emoji示例
   const fetchEmojiExampleData = useCallback(async () => {
     try {
-      const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+      const currentLang = getCurrentLanguage();
       const data = await fetchEmojiExample(currentLang);
       setEmojiExample(data);
     } catch (error) {
@@ -149,7 +156,7 @@ const App: React.FC = () => {
   const handleSearch = useCallback(async (keyword: string) => {
     setIsSearching(true);
     try {
-      const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+      const currentLang = getCurrentLanguage();
       const data = await searchEmoji({ keyword, language: currentLang });
       setSearchResults(data);
     } catch (error) {
@@ -162,7 +169,7 @@ const App: React.FC = () => {
   const handleEmojiClick = useCallback(async (emoji: EmojiItem) => {
     try {
       await navigator.clipboard.writeText(emoji.code);
-      showToastMessage('search.tag.copied', 'success');
+      // showToastMessage('search.tag.copied', 'success');
       
       const updatedRecent = [emoji, ...recentEmojis.filter(e => e.code !== emoji.code)]
         .slice(0, RECENT_EMOJIS_LIMIT);
@@ -176,7 +183,7 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error(t('errors.copy'), error);
-      showToastMessage('toast.copy.error', 'error');
+      // showToastMessage('toast.copy.error', 'error');
     }
   }, [recentEmojis, isSearching, showToastMessage, t]);
 
@@ -213,7 +220,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col bg-white w-full h-full overflow-hidden px-4 pb-3">
-      <NavHead />
+      <NavHead onClose={handleClose} />
       
       {/* 视觉分隔 */}
       <div className="flex items-center gap-3 px-1 my-3">

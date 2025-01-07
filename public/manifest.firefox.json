@@ -5,16 +5,17 @@
   "description": "Your AI emoji finder! Type any mood, phrase, or lyrics, and get the perfect emoji instantly. No more endless scrolling. 🚀",
   "permissions": [
     "clipboardWrite",
+    "clipboardRead",
     "scripting",
+    "notifications",
     "activeTab",
-    "notifications"
+    "storage"
   ],
   "host_permissions": [
-    "http://*/*",
-    "https://*/*"
+    "<all_urls>"
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },
   "action": {
     "default_icon": {
@@ -25,13 +26,17 @@
     }
   },
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"],
+    "type": "module"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "css": ["styles.css"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "all_frames": false,
+      "match_about_blank": false
     }
   ],
   "web_accessible_resources": [{
@@ -43,5 +48,11 @@
     "32": "icon32.png",
     "48": "icon48.png",
     "128": "icon128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "emojiclick@example.com",
+      "strict_min_version": "109.0"
+    }
   }
-}
+} 
