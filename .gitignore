@@ -60,3 +60,7 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 .env.local 
+
+# Plugins
+plugins/
+plugins-ext/
