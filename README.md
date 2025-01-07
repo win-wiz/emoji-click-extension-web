@@ -18,11 +18,20 @@ EmojiClick Toolbar is a powerful emoji picker extension that supports multiple b
 3. Enable Developer Mode.
 4. Click "Load unpacked" and select the project folder.
 
-<!-- ### Firefox -->
+### Firefox
 
-<!-- 1. Ensure `web-ext` tool is installed.
-2. Run `web-ext run` in the project directory for testing.
-3. Use `web-ext build` to package the extension. -->
+1. Clone or download this repository
+2. Run `yarn install` to install dependencies
+3. Run `yarn build:firefox` to build Firefox extension
+4. Open Firefox browser and navigate to `about:addons`
+5. Click "Extensions -> Manage Your Extensions (Settings) -> Debug Add-ons"
+6. Click "Load Temporary Add-on"
+7. Select the `emojiclick_toolbar-x.x.x.zip` file in the `distFirefox` directory
+
+Note:
+- Firefox version >= 109 required
+- Extension needs to be reloaded after Firefox restart
+- If you encounter any issues, please check the browser console for error messages
 
 ## Usage
 

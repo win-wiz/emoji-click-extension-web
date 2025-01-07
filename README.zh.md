@@ -18,11 +18,20 @@ EmojiClick Toolbar 是一个强大的表情符号选择插件，支持多种浏�
 3. 打开开发者模式。
 4. 点击“加载已解压的扩展程序”，选择项目文件夹。
 
-<!-- ### Firefox -->
+### Firefox
 
-<!-- 1. 确保已安装 `web-ext` 工具。
-2. 在项目目录中运行 `web-ext run` 进行测试。
-3. 使用 `web-ext build` 打包插件。 -->
+1. Clone 或下载此仓库
+2. 运行 `yarn install` 安装依赖
+3. 运行 `yarn build:firefox` 构建 Firefox 插件
+4. 打开 Firefox 浏览器，访问 `about:addons`
+5. 点击"扩展 -> 管理您的扩展（设置） -> 调试附加组件"
+6. 点击"临时载入附加组件"
+7. 选择 `distFirefox` 目录下的 `emojiclick_toolbar-x.x.x.zip` 文件
+
+注意：
+- Firefox 版本需要 >= 109
+- 每次重启 Firefox 后需要重新加载插件
+- 如遇到问题，请查看浏览器控制台的错误信息
 
 ## 使用
 
