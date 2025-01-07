@@ -56,7 +56,7 @@ This project is licensed under the MIT License.
 ### Local Development
 
 1. Ensure [Node.js](https://nodejs.org/) and [Yarn](https://yarnpkg.com/) are installed.
-2. Clone this repository and navigate to the project directory.
+2. Clone this repository and navigate to the project directory(https://github.com/win-wiz/emoji-click-extension-web.git).
 3. Run `yarn install` to install dependencies.
 4. Run `yarn start` to start the development server.
 5. Open `http://localhost:3000` in your browser to view the project.
