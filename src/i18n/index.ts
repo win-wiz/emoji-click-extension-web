@@ -28,7 +28,8 @@ export const resources = {
         'activities': 'Activities',
         'objects': 'Objects',
         'symbols': 'Symbols',
-        'flags': 'Flags'
+        'flags': 'Flags',
+        'recent': 'Recent'
       },
       'toast': {
         'load.success': 'Loaded successfully',
@@ -74,7 +75,8 @@ export const resources = {
         'activities': '活动',
         'objects': '物品',
         'symbols': '符号',
-        'flags': '旗帜'
+        'flags': '旗帜',
+        'recent': '最近使用'
       },
       'toast': {
         'load.success': '加载成功',
@@ -120,7 +122,8 @@ export const resources = {
         'activities': '活動',
         'objects': '物品',
         'symbols': '符號',
-        'flags': '旗幟'
+        'flags': '旗幟',
+        'recent': '最近使用'
       },
       'toast': {
         'load.success': '載入成功',
@@ -166,7 +169,8 @@ export const resources = {
         'activities': 'Activités',
         'objects': 'Objets',
         'symbols': 'Symboles',
-        'flags': 'Drapeaux'
+        'flags': 'Drapeaux',
+        'recent': 'Récemment utilisé'
       },
       'toast': {
         'load.success': 'Chargement réussi',
@@ -212,7 +216,8 @@ export const resources = {
         'activities': 'Actividades',
         'objects': 'Objetos',
         'symbols': 'Símbolos',
-        'flags': 'Banderas'
+        'flags': 'Banderas',
+        'recent': 'Recientemente utilizado'
       },
       'toast': {
         'load.success': 'Carga exitosa',

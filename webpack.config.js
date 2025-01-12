@@ -37,6 +37,15 @@ module.exports = {
         test: /\.css$/,
         use: ['style-loader', 'css-loader', 'postcss-loader'],
         exclude: /node_modules/
+      },
+      {
+        test: /\.(png|jpe?g|gif|svg)$/i,
+        type: 'asset',
+        parser: {
+          dataUrlCondition: {
+            maxSize: 8 * 1024 // 8kb
+          }
+        }
       }
     ]
   },

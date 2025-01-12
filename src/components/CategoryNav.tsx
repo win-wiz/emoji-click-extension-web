@@ -1,4 +1,5 @@
 import React, { memo, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { EmojiItem } from '../types';
 
 interface CategoryNavProps {
@@ -52,6 +53,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = memo(({
   onCategoryChange,
   isLoading = false
 }) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const activeCategoryRef = useRef<HTMLButtonElement>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
@@ -138,8 +140,12 @@ export const CategoryNav: React.FC<CategoryNavProps> = memo(({
     if (isLoading) return null;
     
     return Object.entries(categories).map(([typeName], index) => {
-      const isRecent = typeName === '最近使用';
+      const isRecent = typeName === 'recent';
       const icon = isRecent ? '🕒' : icons[index] || '😀';
+
+      if (isRecent) {
+        typeName = t('categories.recent');
+      }
       const isActive = activeCategory === typeName;
       
       return (

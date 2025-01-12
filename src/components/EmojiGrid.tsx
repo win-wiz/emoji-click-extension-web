@@ -14,49 +14,6 @@ const ITEM_SIZE = 44; // emoji按钮的大小
 const ROW_GAP = 8; // 行间距
 const BUFFER_SIZE = 8; // 上下缓冲区的行数
 
-// 提取成单独的组件，避免不必要的重渲染
-// const TooltipContent = memo(({ name, isCopied, position }: { 
-//   name: string; 
-//   isCopied: boolean;
-//   position: 'left' | 'right';
-// }) => {
-//   const { t } = useTranslation();
-
-//   const tooltipClasses = useMemo(() => ({
-//     left: 'right-full top-1/2 -translate-y-1/2 mr-2',
-//     right: 'left-full top-1/2 -translate-y-1/2 ml-2'
-//   }), []);
-
-//   const arrowClasses = useMemo(() => ({
-//     left: '-right-1 top-1/2 -translate-y-1/2 rotate-45',
-//     right: '-left-1 top-1/2 -translate-y-1/2 rotate-45'
-//   }), []);
-
-//   return (
-//     <div 
-//       className={`
-//         absolute whitespace-nowrap z-20 text-white
-//         px-2 py-1 text-xs rounded
-//         pointer-events-none transition-all duration-200 ease-in-out
-//         ${tooltipClasses[position]}
-//         ${isCopied 
-//           ? 'bg-green-500 opacity-0' 
-//           : 'bg-gray-800 opacity-0 group-hover:opacity-100'
-//         }
-//       `}
-//     >
-//       {name}
-//       <div 
-//         className={`
-//           absolute w-2 h-2
-//           ${arrowClasses[position]}
-//           ${isCopied ? 'bg-green-500' : 'bg-gray-800'}
-//         `} 
-//       />
-//     </div>
-//   );
-// });
-
 const EmojiButton = memo(({ 
   emoji,
   index,
@@ -69,50 +26,70 @@ const EmojiButton = memo(({
   const { t } = useTranslation();
   const [isCopied, setIsCopied] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   
   const tooltipPosition = useMemo(() => {
     const colIndex = index % GRID_COLS;
     return colIndex >= GRID_COLS - 4 ? 'left' : 'right';
   }, [index]);
 
-  // 添加消息监听器
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'copyResult' && event.data?.text === emoji.code) {
-        if (event.data.success) {
-          setIsCopied(true);
-          setTimeout(() => setIsCopied(false), 1000);
+  const handleClick = useCallback(async () => {
+    setIsCopied(true);
+    setShowTooltip(true);
+    try {
+      await navigator.clipboard.writeText(emoji.code);
+      window.postMessage({ 
+        type: 'copySuccess',
+        emoji: {
+          code: emoji.code,
+          name: emoji.name,
+          hot: emoji.hot,
+          type: emoji.type,
+          typeName: emoji.typeName
         }
-      }
-    };
+      }, '*');
+      onEmojiClick(emoji);
+      
+      // 500ms 后根据鼠标状态更新提示
+      setTimeout(() => {
+        setIsCopied(false);
+        if (!isHovered) {
+          setShowTooltip(false);
+        }
+      }, 500);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      window.postMessage({ type: 'copyError' }, '*');
+    }
+  }, [emoji, onEmojiClick, isHovered]);
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [emoji.code]);
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+    if (!isCopied) {
+      setShowTooltip(true);
+    }
+  }, [isCopied]);
 
-  const handleClick = useCallback(() => {
-    // 调用父组件的回调
-    onEmojiClick(emoji);
-    
-    // 发送复制请求到content script
-    window.parent.postMessage({
-      type: 'copyEmoji',
-      text: emoji.code
-    }, '*');
-  }, [emoji, onEmojiClick]);
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+    setShowTooltip(false);
+  }, []);
+
+  // 计算要显示的文本
+  const tooltipText = useMemo(() => {
+    return isCopied ? t('search.tag.copied') : emoji.name;
+  }, [isCopied, emoji.name, t]);
 
   return (
     <button
       className="w-10 h-10 flex items-center justify-center text-xl rounded-lg relative group focus:outline-none"
       onClick={handleClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       title={emoji.name}
     >
       {/* 背景层 - 仅hover效果 */}
-      {!isCopied && (
-        <div className="absolute inset-0 rounded-lg bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out" />
-      )}
+      <div className="absolute inset-0 rounded-lg bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out" />
       
       {/* Emoji层 */}
       <div 
@@ -131,15 +108,16 @@ const EmojiButton = memo(({
         className={`
           absolute whitespace-nowrap z-20 text-white
           px-2 py-1 text-xs rounded
-          pointer-events-none transition-all duration-200 ease-in-out
+          pointer-events-none
+          transition-all duration-200 ease-in-out
           ${tooltipPosition === 'left' ? 'right-full top-1/2 -translate-y-1/2 mr-2' : 'left-full top-1/2 -translate-y-1/2 ml-2'}
-          ${isCopied 
-            ? 'bg-green-500 opacity-100' 
-            : 'bg-gray-800 opacity-0 group-hover:opacity-100'
-          }
+          ${isCopied ? 'bg-green-500' : 'bg-gray-800'}
+          ${showTooltip ? 'opacity-100' : 'opacity-0'}
         `}
       >
-        {isCopied ? t('search.tag.copied') : emoji.name}
+        <span className="whitespace-nowrap">
+          {tooltipText}
+        </span>
         <div 
           className={`
             absolute w-2 h-2

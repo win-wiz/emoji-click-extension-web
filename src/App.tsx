@@ -13,7 +13,6 @@ import i18n from './i18n';
 import { LANGUAGE_STORAGE_KEY, getCurrentLanguage } from './utils/language';
 
 // 提取常量
-const RECENT_EMOJIS_LIMIT = 24;
 const TOAST_DURATION = 1500;
 
 interface ToastState {
@@ -27,43 +26,14 @@ const App: React.FC = () => {
   const [searchResults, setSearchResults] = useState<EmojiItem[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('');
-  const [recentEmojis, setRecentEmojis] = useState<EmojiItem[]>([]);
   const [toast, setToast] = useState<ToastState>({ message: '', type: 'info' });
   const [isSearching, setIsSearching] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [icons, setIcons] = useState<string[]>([]);
   const [emojiExample, setEmojiExample] = useState<Record<string, any>[]>([]);
-  const debounceRef = useRef<NodeJS.Timeout>();
   const toastTimeoutRef = useRef<NodeJS.Timeout>();
-
-  // 处理关闭事件
-  const handleClose = useCallback(() => {
-    // 向 content script 发送关闭消息
-    window.parent.postMessage({ type: 'closePanel' }, '*');
-  }, []);
-
-  // 优化 Toast 显示逻辑
-  const showToastMessage = useCallback((message: string, type: ToastState['type'] = 'info') => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-    setToast({ message: t(message), type });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast({ message: '', type: 'info' });
-    }, TOAST_DURATION);
-  }, [t]);
-
-  // 清理定时器
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
-    };
-  }, []);
+  const prevLangRef = useRef(i18n.language);
+  const isInitializedRef = useRef(false);
 
   // 优化 emoji 列表获取
   const getEmojiList = useCallback(async () => {
@@ -86,28 +56,20 @@ const App: React.FC = () => {
         }
       });
 
-      // 使用固定的 key 来存储最近使用的表情
-      if (recentEmojis.length > 0) {
-        groups['recent'] = recentEmojis;
-      }
-
       setEmojiGroups(groups);
       setIcons(tmpIcons);
       
       if (!activeCategory || !(activeCategory in groups)) {
-        setActiveCategory(Object.keys(groups)[0]);
+        const categories = Object.keys(groups);
+        setActiveCategory(categories[0]);
       }
     } catch (error) {
       console.error('Failed to load emoji list:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [recentEmojis, activeCategory]);
+  }, [activeCategory]);
 
-  // 使用 useRef 来存储当前语言和初始化状态
-  const prevLangRef = useRef(i18n.language);
-  const isInitializedRef = useRef(false);
-  
   // 监听语言变化和初始化
   useEffect(() => {
     const currentLang = i18n.language;
@@ -119,6 +81,22 @@ const App: React.FC = () => {
       getEmojiList();
     }
   }, [i18n.language, getEmojiList]);
+
+  // 优化 Toast 显示逻辑
+  const showToastMessage = useCallback((message: string, type: ToastState['type'] = 'info') => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setToast({ message: t(message), type });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast({ message: '', type: 'info' });
+    }, TOAST_DURATION);
+  }, [t]);
+
+  // 处理关闭事件
+  const handleClose = useCallback(() => {
+    window.parent.postMessage({ type: 'closePanel' }, '*');
+  }, []);
 
   // 获取emoji示例
   const fetchEmojiExampleData = useCallback(async () => {
@@ -135,6 +113,32 @@ const App: React.FC = () => {
     fetchEmojiExampleData();
   }, [fetchEmojiExampleData]);
 
+  const handleSearchInputChange = useCallback((value: string) => {
+    setSearchKeyword(value);
+  }, []);
+
+  const handleSearch = useCallback(async (keyword: string) => {
+    setIsSearching(true);
+    try {
+      const currentLang = getCurrentLanguage();
+      const data = await searchEmoji({ keyword, language: currentLang });
+      setSearchResults(data);
+    } catch (error) {
+      // showToastMessage('toast.search.error', 'error');
+    } finally {
+      setIsSearching(false);
+    }
+  }, [showToastMessage]);
+
+  const handleEmojiClick = useCallback((emoji: EmojiItem) => {
+    // 空函数，移除所有最近使用相关逻辑
+  }, []);
+
+  const handleExampleClick = useCallback((example: string) => {
+    setSearchKeyword(example);
+    handleSearch(example);
+  }, [setSearchKeyword, handleSearch]);
+
   // 优化搜索结果处理
   const mappedSearchResults = useMemo(() => 
     searchResults.map(emoji => ({
@@ -149,48 +153,18 @@ const App: React.FC = () => {
       }
     })), [searchResults, t]);
 
-  const handleSearchInputChange = useCallback((value: string) => {
-    setSearchKeyword(value);
+  // 处理消息事件
+  const handleMessage = useCallback((event: MessageEvent) => {
+    if (event.data.type === 'copySuccess') {
+      // 空函数，移除所有最近使用相关逻辑
+    }
   }, []);
 
-  const handleSearch = useCallback(async (keyword: string) => {
-    setIsSearching(true);
-    try {
-      const currentLang = getCurrentLanguage();
-      const data = await searchEmoji({ keyword, language: currentLang });
-      setSearchResults(data);
-    } catch (error) {
-      showToastMessage('toast.search.error', 'error');
-    } finally {
-      setIsSearching(false);
-    }
-  }, [showToastMessage]);
-
-  const handleEmojiClick = useCallback(async (emoji: EmojiItem) => {
-    try {
-      await navigator.clipboard.writeText(emoji.code);
-      // showToastMessage('search.tag.copied', 'success');
-      
-      const updatedRecent = [emoji, ...recentEmojis.filter(e => e.code !== emoji.code)]
-        .slice(0, RECENT_EMOJIS_LIMIT);
-      setRecentEmojis(updatedRecent);
-      
-      if (!isSearching) {
-        setEmojiGroups(prev => ({
-          ...prev,
-          'recent': updatedRecent
-        }));
-      }
-    } catch (error) {
-      console.error(t('errors.copy'), error);
-      // showToastMessage('toast.copy.error', 'error');
-    }
-  }, [recentEmojis, isSearching, showToastMessage, t]);
-
-  const handleExampleClick = useCallback((example: string) => {
-    setSearchKeyword(example);
-    handleSearch(example);
-  }, [setSearchKeyword, handleSearch]);
+  // 添加消息监听
+  useEffect(() => {
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [handleMessage]);
 
   // 优化渲染逻辑
   const renderContent = useMemo(() => {
@@ -214,6 +188,7 @@ const App: React.FC = () => {
         category={activeCategory}
         emojis={emojis}
         onEmojiClick={handleEmojiClick}
+        isLoading={isLoading}
       />
     );
   }, [isLoading, emojiGroups, activeCategory, searchResults, t, handleEmojiClick]);
